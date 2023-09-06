@@ -44,6 +44,55 @@ function get_ready_nodes_count() {
     grep -c -E ",True$"
 }
 
+function reset_host() {
+  local bmc_address="${1}"
+  local bmc_user="${2}"
+  local bmc_pass="${3}"
+  local vendor="${4:-ampere}"
+  ipmi_boot_selection=$([ "${BOOT_MODE}" == "pxe" ] && echo force_pxe || echo force_cdrom)
+  efi_ipmi_boot_selection=$([ "${BOOT_MODE}" == "pxe" ] && echo pxe || echo cdrom)
+  sushy_boot_selection=$([ "${BOOT_MODE}" == "pxe" ] && echo PXE || echo VCD-DVD)
+  echo "Resetting the host ${bmc_address}..."
+  case "${vendor}" in
+    ampere)
+      ipmitool -I lanplus -H "$bmc_address" \
+        -U "$bmc_user" -P "$bmc_pass" \
+        #chassis bootparam set bootflag "$ipmi_boot_selection" options=PEF,watchdog,reset,power
+        chassis bootdev "$efi_ipmi_boot_selection" options=PEF,watchdog,reset,power,efiboot
+    ;;
+    dell)
+      # this is how sushy does it
+      curl -k -u "${bmc_user}:${bmc_pass}" -X POST \
+        "https://$bmc_address/redfish/v1/Managers/iDRAC.Embedded.1/Actions/Oem/EID_674_Manager.ImportSystemConfiguration" \
+         -H "Content-Type: application/json" -d \
+         '{"ShareParameters":{"Target":"ALL"},"ImportBuffer":
+            "<SystemConfiguration><Component FQDD=\"iDRAC.Embedded.1\">
+            <Attribute Name=\"ServerBoot.1#BootOnce\">Enabled</Attribute>
+            <Attribute Name=\"ServerBoot.1#FirstBootDevice\">'"$sushy_boot_selection"'</Attribute>
+            </Component></SystemConfiguration>"}'
+    ;;
+    *)
+      echo "Unknown vendor ${vendor}"
+      return 1
+  esac
+  ipmitool -I lanplus -H "$bmc_address" \
+    -U "$bmc_user" -P "$bmc_pass" \
+    power off || echo "Already off"
+  # If the host is not already powered off, the power on command can fail while the host is still powering off.
+  # Let's retry the power on command multiple times to make sure the command is received in the correct state.
+  for i in {1..10} max; do
+    if [ "$i" == "max" ]; then
+      echo "Failed to reset $bmc_address"
+      return 1
+    fi
+    ipmitool -I lanplus -H "$bmc_address" \
+      -U "$bmc_user" -P "$bmc_pass" \
+      power on && break
+    echo "Failed to power on $bmc_address, retrying..."
+    sleep 5
+  done
+}
+
 function update_image_registry() {
   while ! oc patch configs.imageregistry.operator.openshift.io cluster --type merge \
                  --patch '{"spec":{"managementState":"Managed","storage":{"emptyDir":{}}}}'; do
