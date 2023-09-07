@@ -304,7 +304,7 @@ http_proxy="${proxy}" https_proxy="${proxy}" HTTP_PROXY="${proxy}" HTTPS_PROXY="
 if ! wait $!; then
   # TODO: gather logs??
   echo "ERROR: Bootstrap failed. Aborting execution."
-  trap 'agent_gather_logs' 1
+  agent_gather_logs
   exit 1
 fi
 
@@ -315,6 +315,6 @@ http_proxy="${proxy}" https_proxy="${proxy}" HTTP_PROXY="${proxy}" HTTPS_PROXY="
 if ! wait "$!"; then
   echo "ERROR: Installation failed. Aborting execution."
   # TODO: gather logs??
-  trap 'agent_gather_logs' 1
+  agent_gather_logs
   exit 1
 fi
