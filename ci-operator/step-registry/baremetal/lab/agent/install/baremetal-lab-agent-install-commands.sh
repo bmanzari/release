@@ -19,38 +19,7 @@ if [ -f "${SHARED_DIR}/proxy-conf.sh" ] ; then
     source "${SHARED_DIR}/proxy-conf.sh"
 fi
 
-function mount_virtual_media() {
-  local host="${1}"
-  local iso_path="${2}"
-  echo "Mounting the ISO image in #${host} via virtual media..."
-  timeout -s 9 10m ssh "${SSHOPTS[@]}" "root@${AUX_HOST}" mount.vmedia "${host}" "${iso_path}"
-  local ret=$?
-  if [ $ret -ne 0 ]; then
-    echo "Failed to mount the ISO image in #${host} via virtual media."
-    touch /tmp/virtual_media_mount_failure
-    return 1
-  fi
-  return 0
-}
-
-function oinst() {
-  /tmp/openshift-install --dir="${INSTALL_DIR}" --log-level=debug "${@}" 2>&1 | grep\
-   --line-buffered -v 'password\|X-Auth-Token\|UserData:'
-}
-
-function get_ready_nodes_count() {
-  oc get nodes \
-    -o jsonpath='{range .items[*]}{.metadata.name}{","}{.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}' | \
-    grep -c -E ",True$"
-}
-
-function update_image_registry() {
-  while ! oc patch configs.imageregistry.operator.openshift.io cluster --type merge \
-                 --patch '{"spec":{"managementState":"Managed","storage":{"emptyDir":{}}}}'; do
-    echo "Sleeping before retrying to patch the image registry config..."
-    sleep 60
-  done
-}
+curl -O 
 
 SSHOPTS=(-o 'ConnectTimeout=5'
   -o 'StrictHostKeyChecking=no'
