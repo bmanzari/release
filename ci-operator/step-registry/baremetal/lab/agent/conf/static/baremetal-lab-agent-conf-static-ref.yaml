@@ -42,3 +42,4 @@ ref:
     The baremetal-lab-agent-conf-dynamic step will generate the agent-config.yaml configuration asset for
     a baremetal cluster using the agent installer.
     The minimum requirement for this step to work is to run it after the chain baremetal-lab-agent-conf.
+
