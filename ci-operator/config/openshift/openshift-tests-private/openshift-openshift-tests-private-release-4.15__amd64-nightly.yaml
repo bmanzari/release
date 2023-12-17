@@ -1739,28 +1739,17 @@ tests:
     cluster_profile: equinix-ocp-metal-qe
     env:
       AUX_HOST: openshift-qe-metal-ci.arm.eng.rdu2.redhat.com
+      E2E_RUN_TAGS: '@baremetal-upi and @amd64 and @network-ovnkubernetes and not
+        @fips'
+      IP_STACK: v4
+      NETWORK_TYPE: static
       RESERVE_BOOTSTRAP: "false"
       architecture: amd64
+      masters: "3"
+      workers: "1"
     test:
     - chain: openshift-e2e-test-qe
-    workflow: baremetal-lab-agent-install-network-static-3-plus-1
-- as: baremetal-compact-agent-bmc-ipv4-static-f7
-  cluster: build05
-  cron: 0 0 * * 6,0
-  steps:
-    cluster_profile: equinix-ocp-metal-qe
-    env:
-      AGENT_BM_HOSTS_IN_INSTALL_CONFIG: "true"
-      AUX_HOST: openshift-qe-metal-ci.arm.eng.rdu2.redhat.com
-      DISCONNECTED: "false"
-      RESERVE_BOOTSTRAP: "false"
-      VENDOR: dell
-      architecture: amd64
-      ipv4_enabled: "true"
-      ipv6_enabled: "false"
-      masters: "3"
-      workers: "0"
-    workflow: baremetal-lab-agent-install-network-static
+    workflow: baremetal-lab-agent-install
 - as: baremetal-compact-agent-platform-none-ipv4-static-f14
   cluster: build05
   cron: 33 13 1,15 * *
@@ -1770,14 +1759,15 @@ tests:
       AGENT_PLATFORM_TYPE: none
       AUX_HOST: openshift-qe-metal-ci.arm.eng.rdu2.redhat.com
       DISCONNECTED: "false"
+      INTERNAL_NET_CIDR: 192.168.90.0/24
+      IP_STACK: v4
+      NETWORK_TYPE: static
       RESERVE_BOOTSTRAP: "false"
       architecture: amd64
-      ipv4_enabled: "true"
-      ipv6_enabled: "false"
       masters: "3"
       workers: "0"
-    workflow: baremetal-lab-agent-install-network-static
-- as: baremetal-ha-agent-ipv4-static-disc-f7
+    workflow: baremetal-lab-agent-install
+- as: baremetal-ha-agent-ipv4-static-disconnected-f7
   cluster: build05
   cron: 15 14 5,12,21,28 * *
   steps:
@@ -1786,16 +1776,15 @@ tests:
       AUX_HOST: openshift-qe-metal-ci.arm.eng.rdu2.redhat.com
       E2E_RUN_TAGS: '@disconnected'
       FIPS_ENABLED: "true"
+      IP_STACK: v4
       RESERVE_BOOTSTRAP: "false"
       TEST_FILTERS: ~ChkUpgrade&;~NonPreRelease&;~Serial&;~Disruptive&;~ConnectedOnly&;~HyperShiftMGMT&;~MicroShiftOnly&
       architecture: amd64
-      ipv4_enabled: "true"
-      ipv6_enabled: "false"
       masters: "3"
       workers: "2"
     test:
     - chain: openshift-e2e-test-qe
-    workflow: baremetal-lab-agent-install-network-static-disconnected
+    workflow: baremetal-lab-agent-install-disconnected
 - as: baremetal-ha-agent-platform-none-ipv4-static-f14
   cluster: build05
   cron: 30 14 9,23 * *
@@ -1805,13 +1794,14 @@ tests:
       AGENT_PLATFORM_TYPE: none
       AUX_HOST: openshift-qe-metal-ci.arm.eng.rdu2.redhat.com
       DISCONNECTED: "false"
+      INTERNAL_NET_CIDR: 192.168.90.0/24
+      IP_STACK: v4
+      NETWORK_TYPE: static
       RESERVE_BOOTSTRAP: "false"
       architecture: amd64
-      ipv4_enabled: "true"
-      ipv6_enabled: "false"
       masters: "3"
       workers: "2"
-    workflow: baremetal-lab-agent-install-network-static
+    workflow: baremetal-lab-agent-install
 - as: baremetal-pxe-compact-agent-ipv4-static-connected-f14
   cluster: build05
   cron: 36 13 10,24 * *
@@ -1819,10 +1809,11 @@ tests:
     cluster_profile: equinix-ocp-metal-qe
     env:
       AUX_HOST: openshift-qe-metal-ci.arm.eng.rdu2.redhat.com
+      E2E_RUN_TAGS: '@amd64 and @baremetal-upi and @network-ovnkubernetes and not
+        @fips'
+      IP_STACK: v4
       RESERVE_BOOTSTRAP: "false"
       architecture: amd64
-      ipv4_enabled: "true"
-      ipv6_enabled: "false"
       masters: "3"
       workers: "0"
     test:
@@ -1835,10 +1826,11 @@ tests:
     cluster_profile: equinix-ocp-metal-qe
     env:
       AUX_HOST: openshift-qe-metal-ci.arm.eng.rdu2.redhat.com
+      E2E_RUN_TAGS: '@amd64 and @baremetal-upi and @network-ovnkubernetes and not
+        @fips'
+      IP_STACK: v4
       RESERVE_BOOTSTRAP: "false"
       architecture: amd64
-      ipv4_enabled: "true"
-      ipv6_enabled: "false"
       masters: "3"
       workers: "2"
     test:
@@ -1851,10 +1843,11 @@ tests:
     cluster_profile: equinix-ocp-metal-qe
     env:
       AUX_HOST: openshift-qe-metal-ci.arm.eng.rdu2.redhat.com
+      E2E_RUN_TAGS: '@amd64 and @baremetal-upi and @network-ovnkubernetes and @singlenode
+        and not @fips'
+      IP_STACK: v4
       RESERVE_BOOTSTRAP: "false"
       architecture: amd64
-      ipv4_enabled: "true"
-      ipv6_enabled: "false"
       masters: "1"
       workers: "0"
     test:
@@ -1868,15 +1861,15 @@ tests:
     env:
       AUX_HOST: openshift-qe-metal-ci.arm.eng.rdu2.redhat.com
       FIPS_ENABLED: "true"
+      IP_STACK: v4
+      NETWORK_TYPE: static
       RESERVE_BOOTSTRAP: "false"
       architecture: amd64
-      ipv4_enabled: "true"
-      ipv6_enabled: "false"
       masters: "1"
       workers: "0"
     test:
     - chain: openshift-e2e-test-qe
-    workflow: baremetal-lab-agent-install-network-static
+    workflow: baremetal-lab-agent-install
 - as: baremetal-upi-ovn-ipv4-f14
   cluster: build05
   cron: 1 18 14,28 * *
